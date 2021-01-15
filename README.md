@@ -1,6 +1,9 @@
 # ⛄️ Snowman
 
-⛄ Snowman provides facilities for building chatbots in Go.
+_Snowman_ provides facilities for building chat-bots in Go.
+
+A bot consists of `UI` to interact with users, an Intent `Classifier` to detect the intent behind a `Msg` from a user
+and a `Processor` to respond to the user based on the intent detected.
 
 ## Usage
 
@@ -9,19 +12,23 @@
 ```go
 package main
 
-import "github.com/spy16/snowman"
+import (
+	"context"
+
+	"github.com/spy16/snowman"
+)
 
 func main() {
 	logger := logurs.New()
 
-	bot := snowman.New(
-		snowman.WithName("Rick Sanchez"),
+	if err := snowman.Run(context.Background(),
+		snowman.WithName("Snowy"),
+		snowman.WithUI(snowman.ConsoleUI{}),
 		snowman.WithClassifier(myIntentClassifer),
 		snowman.WithProcessor(myIntentProcessor),
 		snowman.WithLogger(logger),
-	)
-	if err := bot.Run(ctx); err != nil {
-		logger.Errorf("bot exited with error: %v", err)
+	); err != nil {
+		logger.Errorf("snowy exited with error: %v", err)
 	}
 }
 ```
@@ -30,18 +37,4 @@ func main() {
 
 1. Install using `go get -u -v github.com/spy16/snowman/cmd/snowman`
 2. Run using `snowman --name=snowy`
-
-## ffnet
-
-`ffnet` package provides a generic Fully-Connected Feedforward neural network, and a Stochastic Gradient Descent based
-trainer. Following snippet shows how to create a simple 2-10-10 network with ReLU for hidden and sigmoid for output
-layer activations and how to make a prediction.
-
-```go
-net, _ := ffnet.New(2,
-ffnet.Layer(10, ffnet.ReLU()),
-ffnet.Layer(10, ffnet.Sigmoid()),
-)
-net.Predict(1, 1)
-```
 

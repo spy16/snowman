@@ -8,6 +8,12 @@ import (
 
 const defaultName = "Snowy"
 
+// Run sets up a snowman instance and runs until context is cancelled or the UI
+// signals a by closing its listener channel.
+func Run(ctx context.Context, opts ...Option) error {
+	return New(opts...).Run(ctx)
+}
+
 // New returns an instance of Bot with given name and classifier. If the classifier
 // is nil, a default dumb classifier will be used.
 func New(opts ...Option) *Bot {
@@ -43,30 +49,40 @@ func (bot *Bot) Run(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
+			bot.process(ctx, Intent{ID: IntentSysShutdown})
 			return nil
 
 		case msg, ok := <-inputs:
 			if !ok {
 				return nil
 			}
-			bot.handle(ctx, msg)
+			intent, err := bot.classify(ctx, msg)
+			if err != nil || intent == nil {
+				bot.handleErr(err)
+				continue
+			}
+			bot.process(ctx, *intent)
 		}
 	}
 }
 
-func (bot *Bot) handle(ctx context.Context, msg Msg) {
+func (bot *Bot) classify(ctx context.Context, msg Msg) (*Intent, error) {
 	msg.Body = strings.TrimSpace(msg.Body)
 	if msg.Body == "" {
-		return
+		return nil, nil
 	}
 
 	intent, err := bot.cls.Classify(ctx, msg)
 	if err != nil {
 		bot.handleErr(err)
-		return
+		return nil, err
 	}
 	intent.Msg = msg
 
+	return &intent, nil
+}
+
+func (bot *Bot) process(ctx context.Context, intent Intent) {
 	botMsg, err := bot.proc.Process(ctx, intent)
 	if err != nil {
 		bot.handleErr(err)
@@ -74,7 +90,7 @@ func (bot *Bot) handle(ctx context.Context, msg Msg) {
 	}
 	botMsg.From = bot.name
 
-	if err := bot.ui.Say(ctx, msg.From, botMsg); err != nil {
+	if err := bot.ui.Say(ctx, intent.Msg.From, botMsg); err != nil {
 		bot.handleErr(err)
 		return
 	}

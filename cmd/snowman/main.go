@@ -16,17 +16,17 @@ var name = flag.String("name", "Snowy", "")
 
 func main() {
 	flag.Parse()
-
 	logger := logrus.New()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go cancelOnInterrupt(cancel, logger)
 
-	bot := snowman.New(
-		snowman.WithName(*name),
-	)
-	if err := bot.Run(ctx); err != nil {
-		logger.Errorf("bot exited with error: %v", err)
+	if err := snowman.Run(ctx,
+		snowman.WithName("Snowy"),
+		snowman.WithLogger(logger),
+		snowman.WithUI(snowman.ConsoleUI{}),
+	); err != nil {
+		logger.Errorf("snowy exited with error: %v", err)
 	}
 }
 

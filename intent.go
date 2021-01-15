@@ -2,6 +2,11 @@ package snowman
 
 import "context"
 
+// Intent identifiers for system events.
+const (
+	IntentSysShutdown = "sys.shutdown"
+)
+
 var (
 	_ Classifier = ClassifierFunc(nil)
 	_ Processor  = ProcessorFunc(nil)
@@ -53,6 +58,12 @@ var (
 	})
 
 	processUnknown = ProcessorFunc(func(ctx context.Context, intent Intent) (Msg, error) {
+		if intent.ID == IntentSysShutdown {
+			return Msg{
+				Body: "👋🙂 Bye!",
+			}, nil
+		}
+
 		return Msg{
 			Body: "I don't understand what you are saying 😐",
 		}, nil
