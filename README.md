@@ -1,5 +1,7 @@
 # ⛄️ Snowman
 
+> WIP
+
 _Snowman_ provides facilities for building chat-bots in Go.
 
 A bot consists of `UI` to interact with users, an Intent `Classifier` to detect the intent behind a `Msg` from a user
@@ -38,3 +40,10 @@ func main() {
 1. Install using `go get -u -v github.com/spy16/snowman/cmd/snowman`
 2. Run using `snowman --name=snowy`
 
+## TODO
+
+- [ ] Support for channels / independent conversations.
+- [ ] `Processor` with `Module` mechanism for intent classes.
+- [ ] Slack RTM & Socket UI implementations.
+- [ ] NLP with [prose](https://github.com/jdkato/prose)
+- [ ] An intent classifier with FFNet.

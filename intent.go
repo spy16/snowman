@@ -4,7 +4,8 @@ import "context"
 
 // Intent identifiers for system events.
 const (
-	IntentSysShutdown = "sys.shutdown"
+	SysIntentUnknown  = "sys.unknown"
+	SysIntentShutdown = "sys.shutdown"
 )
 
 var (
@@ -51,14 +52,14 @@ func (pf ProcessorFunc) Process(ctx context.Context, intent Intent) (Msg, error)
 var (
 	classifyUnknown = ClassifierFunc(func(ctx context.Context, msg Msg) (Intent, error) {
 		return Intent{
-			ID:  "UNKNOWN",
+			ID:  SysIntentUnknown,
 			Msg: msg,
 			Ctx: nil,
 		}, nil
 	})
 
 	processUnknown = ProcessorFunc(func(ctx context.Context, intent Intent) (Msg, error) {
-		if intent.ID == IntentSysShutdown {
+		if intent.ID == SysIntentShutdown {
 			return Msg{
 				Body: "👋🙂 Bye!",
 			}, nil

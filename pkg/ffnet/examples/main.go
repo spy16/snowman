@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/spy16/snowman/ffnet"
+	"github.com/spy16/snowman/pkg/ffnet"
 )
 
 func main() {

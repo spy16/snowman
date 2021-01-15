@@ -2,7 +2,6 @@ package snowman
 
 import (
 	"context"
-	"log"
 	"strings"
 )
 
@@ -49,7 +48,7 @@ func (bot *Bot) Run(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
-			bot.process(ctx, Intent{ID: IntentSysShutdown})
+			bot.process(ctx, Intent{ID: SysIntentShutdown})
 			return nil
 
 		case msg, ok := <-inputs:
@@ -83,12 +82,14 @@ func (bot *Bot) classify(ctx context.Context, msg Msg) (*Intent, error) {
 }
 
 func (bot *Bot) process(ctx context.Context, intent Intent) {
+	bot.logger.Infof("processing intent: %s", intent.ID)
+
 	botMsg, err := bot.proc.Process(ctx, intent)
 	if err != nil {
 		bot.handleErr(err)
 		return
 	}
-	botMsg.From = bot.name
+	botMsg.From = User{ID: bot.name, Name: bot.name}
 
 	if err := bot.ui.Say(ctx, intent.Msg.From, botMsg); err != nil {
 		bot.handleErr(err)
@@ -100,14 +101,21 @@ func (bot *Bot) handleErr(err error) {
 	if err == nil {
 		return
 	}
-	log.Printf("error: %v", err)
+	bot.logger.Warnf("ignoring error: %v", err)
 }
 
 // Msg represents a message from the user. Msg can contain additional context
 // in terms of attributes that may be used by the intent classifier or action
 // & response generation.
 type Msg struct {
-	From    string                 `json:"from"`
+	From    User                   `json:"from"`
 	Body    string                 `json:"body"`
+	Attribs map[string]interface{} `json:"attribs"`
+}
+
+// User represents a user that is interacting with snowman.
+type User struct {
+	ID      string                 `json:"id"`
+	Name    string                 `json:"name"`
 	Attribs map[string]interface{} `json:"attribs"`
 }

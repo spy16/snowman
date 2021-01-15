@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/spy16/snowman/ffnet/mat"
+	"github.com/spy16/snowman/pkg/mat"
 )
 
 // SGDTrainer implements Stochastic Gradient Descent trainer for FFNet

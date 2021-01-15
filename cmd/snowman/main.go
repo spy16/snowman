@@ -21,10 +21,24 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	go cancelOnInterrupt(cancel, logger)
 
+	reClassifier := &snowman.RegexClassifier{}
+	_ = reClassifier.Register("my name is (?P<name>.*)", "user.greets")
+
 	if err := snowman.Run(ctx,
-		snowman.WithName("Snowy"),
+		snowman.WithName(*name),
 		snowman.WithLogger(logger),
 		snowman.WithUI(snowman.ConsoleUI{}),
+		snowman.WithClassifier(reClassifier),
+		snowman.WithProcessor(snowman.ProcessorFunc(func(ctx context.Context, intent snowman.Intent) (snowman.Msg, error) {
+			switch intent.ID {
+			case "user.greets":
+				return snowman.Msg{
+					Body: "👋 Hello " + intent.Ctx["name"].(string),
+				}, nil
+			default:
+				return snowman.Msg{Body: "I don't understand 😐"}, nil
+			}
+		})),
 	); err != nil {
 		logger.Errorf("snowy exited with error: %v", err)
 	}

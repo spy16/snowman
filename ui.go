@@ -21,7 +21,7 @@ type UI interface {
 	// Say should display the message to the user as if the bot said it.
 	// Target user that should receive the message should be identified
 	// using the 'user' value.
-	Say(ctx context.Context, user string, msg Msg) error
+	Say(ctx context.Context, toUser User, msg Msg) error
 }
 
 // ConsoleUI implements a console based UI. Stdin is used for reading
@@ -45,7 +45,7 @@ func (cui ConsoleUI) Listen(ctx context.Context) (<-chan Msg, error) {
 			}
 
 			msg := Msg{
-				From:    "user",
+				From:    User{ID: "user"},
 				Body:    sc.Text(),
 				Attribs: nil,
 			}
@@ -61,7 +61,7 @@ func (cui ConsoleUI) Listen(ctx context.Context) (<-chan Msg, error) {
 	return out, nil
 }
 
-func (cui ConsoleUI) Say(_ context.Context, _ string, msg Msg) error {
+func (cui ConsoleUI) Say(_ context.Context, _ User, msg Msg) error {
 	fmt.Print("\r" + strings.Repeat(" ", len(cui.Prompt)+5))
 	fmt.Println("\r" + msg.Body)
 	fmt.Print(cui.Prompt)

@@ -3,7 +3,7 @@ package ffnet
 import (
 	"math/rand"
 
-	"github.com/spy16/snowman/ffnet/mat"
+	"github.com/spy16/snowman/pkg/mat"
 )
 
 // Layer adds a layer of given size and activations to the network.

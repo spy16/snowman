@@ -3,7 +3,7 @@ package mat_test
 import (
 	"testing"
 
-	"github.com/spy16/snowman/ffnet/mat"
+	"github.com/spy16/snowman/pkg/mat"
 )
 
 func TestNew(t *testing.T) {

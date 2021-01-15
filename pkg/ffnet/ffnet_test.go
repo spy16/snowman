@@ -3,7 +3,7 @@ package ffnet_test
 import (
 	"testing"
 
-	"github.com/spy16/snowman/ffnet"
+	"github.com/spy16/snowman/pkg/ffnet"
 )
 
 func BenchmarkFFNet_Predict_2_10(b *testing.B) {

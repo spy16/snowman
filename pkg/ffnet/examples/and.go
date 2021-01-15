@@ -3,14 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 
-	"github.com/spy16/snowman/ffnet"
+	"github.com/spy16/snowman/pkg/ffnet"
 )
 
-func exampleXORNet() {
+func exampleANDGate() {
 	n, err := ffnet.New(2,
-		ffnet.Layer(5, ffnet.ReLU()),    // ReLU hidden layer
+		ffnet.Layer(5, ffnet.Sigmoid()), // ReLU hidden layer
 		ffnet.Layer(1, ffnet.Sigmoid()), // sigmoid output layer
 	)
 	if err != nil {
@@ -20,9 +19,9 @@ func exampleXORNet() {
 
 	samples := []ffnet.Example{
 		{[]float64{0, 0}, []float64{0}},
-		{[]float64{0, 1}, []float64{1}},
-		{[]float64{1, 0}, []float64{1}},
-		{[]float64{1, 1}, []float64{0}},
+		{[]float64{0, 1}, []float64{0}},
+		{[]float64{1, 0}, []float64{0}},
+		{[]float64{1, 1}, []float64{1}},
 	}
 
 	fmt.Println("Before training:")
@@ -32,12 +31,11 @@ func exampleXORNet() {
 	}
 
 	trainer := ffnet.SGDTrainer{
-		FFNet:   n,
-		Eta:     0.05,
-		Loss:    ffnet.SquaredError(),
-		LogFunc: log.Printf,
+		FFNet: n,
+		Eta:   0.05,
+		Loss:  ffnet.SquaredError(),
 	}
-	if err := trainer.Train(context.Background(), 500, samples); err != nil {
+	if err := trainer.Train(context.Background(), 5000, samples); err != nil {
 		panic(err)
 	}
 

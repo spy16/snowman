@@ -3,7 +3,7 @@ package ffnet
 import (
 	"math"
 
-	"github.com/spy16/snowman/ffnet/mat"
+	"github.com/spy16/snowman/pkg/mat"
 )
 
 // Differentiable is used to contain an activation function and its

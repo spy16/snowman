@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/spy16/snowman/ffnet/mat"
+	"github.com/spy16/snowman/pkg/mat"
 )
 
 // New initializes a new artificial neural network with given configuration.
