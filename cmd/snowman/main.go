@@ -36,7 +36,9 @@ func main() {
 					Body: "👋 Hello " + intent.Ctx["name"].(string),
 				}, nil
 			default:
-				return snowman.Msg{Body: "I don't understand 😐"}, nil
+				return snowman.Msg{
+					Body: "I don't understand 😐",
+				}, nil
 			}
 		})),
 	); err != nil {

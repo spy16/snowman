@@ -59,7 +59,7 @@ func WithName(name string) Option {
 func WithLogger(lg Logger) Option {
 	return func(bot *Bot) {
 		if lg == nil {
-			lg = noOpLogger{}
+			lg = NoOpLogger{}
 		}
 		bot.logger = lg
 	}
@@ -68,7 +68,7 @@ func WithLogger(lg Logger) Option {
 func withDefaults(opts []Option) []Option {
 	return append([]Option{
 		WithName(defaultName),
-		WithLogger(stdLogger{}),
+		WithLogger(StdLogger{}),
 		WithUI(nil),
 		WithClassifier(nil),
 		WithProcessor(nil),
