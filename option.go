@@ -13,32 +13,21 @@ type Option func(bot *Bot)
 func WithClassifier(classifier Classifier) Option {
 	return func(bot *Bot) {
 		if classifier == nil {
-			classifier = classifyUnknown
+			re := &RegexClassifier{}
+			_ = re.Register(SysIntentUnknown, ".*")
 		}
 		bot.cls = classifier
 	}
 }
 
-// WithProcessor sets the intent processor to be used by the bot. If
-// processor is nil, a default processor with constant response will
-// be used.
-func WithProcessor(processor Processor) Option {
-	return func(bot *Bot) {
-		if processor == nil {
-			processor = processUnknown
-		}
-		bot.proc = processor
-	}
-}
-
-// WithUI sets the UI to be used by the bot. If ui is nil, a console
-// UI will be used.
+// WithUI sets the UI to be used by the bot. WithUI can be used multiple
+// times to use multiple interfaces.
 func WithUI(ui UI) Option {
 	return func(bot *Bot) {
 		if ui == nil {
-			ui = &ConsoleUI{Prompt: "user > "}
+			return
 		}
-		bot.ui = ui
+		bot.uis = append(bot.uis, ui)
 	}
 }
 
@@ -50,7 +39,10 @@ func WithName(name string) Option {
 		if name == "" {
 			name = defaultName
 		}
-		bot.name = name
+		bot.self = User{
+			ID:   strings.ToLower(name),
+			Name: name,
+		}
 	}
 }
 
@@ -71,6 +63,5 @@ func withDefaults(opts []Option) []Option {
 		WithLogger(StdLogger{}),
 		WithUI(nil),
 		WithClassifier(nil),
-		WithProcessor(nil),
 	}, opts...)
 }

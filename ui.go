@@ -3,9 +3,11 @@ package snowman
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 )
 
 var _ UI = (*ConsoleUI)(nil)
@@ -13,57 +15,57 @@ var _ UI = (*ConsoleUI)(nil)
 // UI represents the interface used for interactions between the bot and
 // the user.
 type UI interface {
-	// Listen should a start a goroutine that writes the messages sent
-	// by the user to the returned channel. GoRoutine should exit when
-	// the context is cancelled.
-	Listen(ctx context.Context) (<-chan Msg, error)
-
 	// Say should display the message to the user as if the bot said it.
 	// Target user that should receive the message should be identified
 	// using the 'user' value.
-	Say(ctx context.Context, toUser User, msg Msg) error
+	Say(ctx context.Context, msg Msg) error
+
+	// Listen should listen for messages from user and deliver them to the
+	// handler. Listen should block until UI reaches a terminal state or
+	// until context is cancelled.
+	Listen(ctx context.Context, handle func(msg Msg)) error
 }
 
 // ConsoleUI implements a console based UI. Stdin is used for reading
 // input from the user and Stdout is used for output.
-type ConsoleUI struct{ Prompt string }
+type ConsoleUI struct {
+	Prompt string
 
-func (cui ConsoleUI) Listen(ctx context.Context) (<-chan Msg, error) {
-	if cui.Prompt == "" {
-		cui.Prompt = ">> "
-	}
-
-	out := make(chan Msg)
-	go func() {
-		defer close(out)
-
-		sc := bufio.NewScanner(os.Stdin)
-		for ctx.Err() == nil {
-			fmt.Print(cui.Prompt)
-			if !sc.Scan() {
-				break
-			}
-
-			msg := Msg{
-				From:    User{ID: "user"},
-				Body:    sc.Text(),
-				Attribs: nil,
-			}
-
-			select {
-			case <-ctx.Done():
-				return
-			case out <- msg:
-			}
-		}
-	}()
-
-	return out, nil
+	once    sync.Once
+	scanner *bufio.Scanner
 }
 
-func (cui ConsoleUI) Say(_ context.Context, _ User, msg Msg) error {
+func (cui *ConsoleUI) Listen(ctx context.Context, handle func(msg Msg)) error {
+	cui.once.Do(func() {
+		if cui.Prompt == "" {
+			cui.Prompt = ">> "
+		}
+		cui.scanner = bufio.NewScanner(os.Stdin)
+	})
+
+	for {
+		select {
+		case <-ctx.Done():
+			if errors.Is(ctx.Err(), context.Canceled) {
+				return nil
+			}
+			return ctx.Err()
+
+		default:
+			fmt.Print(cui.Prompt)
+			if !cui.scanner.Scan() {
+				return nil
+			}
+			handle(Msg{
+				From: User{ID: "user"},
+				Body: cui.scanner.Text(),
+			})
+		}
+	}
+}
+
+func (cui *ConsoleUI) Say(_ context.Context, msg Msg) error {
 	fmt.Print("\r" + strings.Repeat(" ", len(cui.Prompt)+5))
 	fmt.Println("\r" + msg.Body)
-	fmt.Print(cui.Prompt)
 	return nil
 }

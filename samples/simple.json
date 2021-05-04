@@ -1,0 +1,24 @@
+{
+  "patterns": [
+    [
+      "i am (?P<name>.*)",
+      "user.intro"
+    ],
+    [
+      "call me (?P<name>.*)",
+      "user.intro"
+    ],
+    [
+      "(what|who) are you",
+      "self.intro"
+    ],
+    [
+      "(introduce|tell me about) you(rself)?",
+      "self.intro"
+    ],
+    [
+      "(help|what can you do)(for me)?",
+      "self.abilities"
+    ]
+  ]
+}

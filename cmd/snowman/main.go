@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"os"
 	"os/signal"
@@ -10,46 +11,62 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/spy16/snowman"
+	"github.com/spy16/snowman/slack"
 )
 
-var name = flag.String("name", "Snowy", "")
+var (
+	name        = flag.String("name", "Snowy", "Name for the bot")
+	slackToken  = flag.String("slack", "", "Slack Bot Token")
+	intentsFile = flag.String("intents", "", "Intent patterns JSON file")
+)
 
 func main() {
 	flag.Parse()
 	logger := logrus.New()
 
-	ctx, cancel := context.WithCancel(context.Background())
-	go cancelOnInterrupt(cancel, logger)
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
 
-	reClassifier := &snowman.RegexClassifier{}
-	_ = reClassifier.Register("my name is (?P<name>.*)", "user.greets")
+	cls, err := getClassifier(*intentsFile)
+	if err != nil {
+		logger.Fatalf("failed to init classifier: %v", err)
+	}
 
-	if err := snowman.Run(ctx,
+	opts := []snowman.Option{
 		snowman.WithName(*name),
 		snowman.WithLogger(logger),
-		snowman.WithUI(snowman.ConsoleUI{}),
-		snowman.WithClassifier(reClassifier),
-		snowman.WithProcessor(snowman.ProcessorFunc(func(ctx context.Context, intent snowman.Intent) (snowman.Msg, error) {
-			switch intent.ID {
-			case "user.greets":
-				return snowman.Msg{
-					Body: "👋 Hello " + intent.Ctx["name"].(string),
-				}, nil
-			default:
-				return snowman.Msg{
-					Body: "I don't understand 😐",
-				}, nil
-			}
-		})),
-	); err != nil {
+		snowman.WithUI(&snowman.ConsoleUI{}),
+		snowman.WithClassifier(cls),
+	}
+
+	if *slackToken != "" {
+		slackUI := &slack.UI{
+			Token:  *slackToken,
+			Logger: logger,
+		}
+		opts = append(opts, snowman.WithUI(slackUI))
+	}
+
+	if err := snowman.Run(ctx, opts...); err != nil {
 		logger.Errorf("snowy exited with error: %v", err)
 	}
 }
 
-func cancelOnInterrupt(cancel context.CancelFunc, logger snowman.Logger) {
-	sigCh := make(chan os.Signal)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-	sig := <-sigCh
-	logger.Infof("terminating (signal: %v)", sig)
-	cancel()
+func getClassifier(intentsFile string) (snowman.Classifier, error) {
+	reClassifier := &snowman.RegexClassifier{}
+	if intentsFile == "" {
+		return reClassifier, nil
+	}
+
+	f, err := os.Open(intentsFile)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = f.Close() }()
+
+	if err := json.NewDecoder(f).Decode(&reClassifier); err != nil {
+		return nil, err
+	}
+
+	return reClassifier, nil
 }
