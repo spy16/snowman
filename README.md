@@ -4,8 +4,8 @@
 
 _Snowman_ provides facilities for building chat-bots in Go.
 
-A bot consists of `UI` to interact with users, an Intent `Classifier` to detect the intent behind a `Msg` from a user
-and a `Processor` to respond to the user based on the intent detected.
+A bot consists of `UI` to interact with users, an Intent `Classifier` to detect the intent behind a `Msg` from a user.
+Bot session then executes the `Intent` to generate actions/response.
 
 ## Usage
 
@@ -25,9 +25,8 @@ func main() {
 
 	if err := snowman.Run(context.Background(),
 		snowman.WithName("Snowy"),
-		snowman.WithUI(snowman.ConsoleUI{}),
-		snowman.WithClassifier(myIntentClassifer),
-		snowman.WithProcessor(myIntentProcessor),
+		snowman.WithUI(&snowman.ConsoleUI{}),
+		snowman.WithClassifier(&snowman.RegexClassifier{}),
 		snowman.WithLogger(logger),
 	); err != nil {
 		logger.Errorf("snowy exited with error: %v", err)
@@ -42,8 +41,8 @@ func main() {
 
 ## TODO
 
-- [ ] Support for channels / independent conversations.
-- [ ] `Processor` with `Module` mechanism for intent classes.
-- [ ] Slack RTM & Socket UI implementations.
+- [x] Support for channels / independent conversations.
+- [x] Slack RTM
+- [ ] Socket UI implementations.
 - [ ] NLP with [prose](https://github.com/jdkato/prose)
 - [ ] An intent classifier with FFNet.
