@@ -16,6 +16,7 @@ import (
 
 var (
 	name        = flag.String("name", "Snowy", "Name for the bot")
+	noConsole   = flag.Bool("no-console", false, "Disable console UI")
 	slackToken  = flag.String("slack", "", "Slack Bot Token")
 	intentsFile = flag.String("intents", "", "Intent patterns JSON file")
 )
@@ -35,8 +36,11 @@ func main() {
 	opts := []snowman.Option{
 		snowman.WithName(*name),
 		snowman.WithLogger(logger),
-		snowman.WithUI(&snowman.ConsoleUI{}),
 		snowman.WithClassifier(cls),
+	}
+
+	if !*noConsole {
+		opts = append(opts, snowman.WithUI(&snowman.ConsoleUI{}))
 	}
 
 	if *slackToken != "" {

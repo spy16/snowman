@@ -7,6 +7,14 @@ import (
 // Option can be provided to New() to customise Bot initialisation.
 type Option func(bot *Bot)
 
+// WithExecutor sets the executor to be used for processing the intents.
+// If exec is nil, default Executor will be used.
+func WithExecutor(exec Executor) Option {
+	return func(bot *Bot) {
+		bot.exec = exec
+	}
+}
+
 // WithClassifier sets the intent classifier to be used by the bot.
 // If classifier is nil, a default classifier which always returns
 // UNKNOWN intent will be used.
@@ -63,5 +71,6 @@ func withDefaults(opts []Option) []Option {
 		WithLogger(StdLogger{}),
 		WithUI(nil),
 		WithClassifier(nil),
+		WithExecutor(nil),
 	}, opts...)
 }

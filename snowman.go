@@ -36,10 +36,17 @@ type Bot struct {
 	self   User
 	cls    Classifier
 	uis    []UI
+	exec   Executor
 	logger Logger
 
 	diLock    sync.RWMutex
 	dialogues map[string]*Dialogue
+}
+
+// Executor is responsible for executing intents classified from a message and
+// generate response.
+type Executor interface {
+	Execute(ctx context.Context, di Dialogue, msg Msg, intents []Intent) (*Msg, error)
 }
 
 // Run starts all the workers. Run blocks the current goroutine until the ctx
@@ -85,11 +92,11 @@ func (bot *Bot) handle(ctx context.Context, msg Msg, ui UI) {
 	} else if resp == nil {
 		return // nothing to say.
 	}
+
 	resp.From = bot.self
 	if resp.To.ID == "" {
 		resp.To = msg.From
 	}
-
 	if err := ui.Say(context.Background(), *resp); err != nil {
 		bot.handleErr("UI.Say", err)
 	}
@@ -100,21 +107,23 @@ func (bot *Bot) execute(ctx context.Context, di Dialogue, msg Msg, intents []Int
 		return intents[i].Confidence < intents[j].Confidence
 	})
 
-	if len(intents) == 0 || intents[0].ID == "sys.dumb" {
+	if len(intents) == 0 || intents[0].ID == SysIntentUnknown {
 		return &Msg{
 			At:   time.Now(),
 			To:   msg.From,
 			From: msg.To,
 			Body: sysDumbResponse(),
 		}, nil
+	} else if bot.exec == nil {
+		return &Msg{
+			At:   time.Now(),
+			To:   msg.From,
+			From: msg.To,
+			Body: fmt.Sprintf("I don't know how to execute '%s'", intents[0].ID),
+		}, nil
 	}
 
-	return &Msg{
-		At:   time.Now(),
-		To:   msg.From,
-		From: msg.To,
-		Body: intents[0].String(),
-	}, nil
+	return bot.exec.Execute(ctx, di, msg, intents)
 }
 
 func (bot *Bot) allocDialogue(with User) *Dialogue {
