@@ -4,40 +4,20 @@
 
 _Snowman_ provides facilities for building chat-bots in Go.
 
-A bot consists of `UI` to interact with users, an Intent `Classifier` to detect the intent behind a `Msg` from a user.
-Bot session then executes the `Intent` to generate actions/response.
+A bot consists of `UI` to interact with users, and `Handler` to understand the intent, figure out the action and finally
+generate response. Handler follows the familiar `http.Handler` approach and allows for all the standard patterns used (
+e.g., middlewares).
 
 ## Usage
 
 ### As Library
 
-```go
-package main
-
-import (
-	"context"
-
-	"github.com/spy16/snowman"
-)
-
-func main() {
-	logger := logurs.New()
-
-	if err := snowman.Run(context.Background(),
-		snowman.WithName("Snowy"),
-		snowman.WithUI(&snowman.ConsoleUI{}),
-		snowman.WithClassifier(&snowman.RegexClassifier{}),
-		snowman.WithLogger(logger),
-	); err != nil {
-		logger.Errorf("snowy exited with error: %v", err)
-	}
-}
-```
+Refer [cmd/snowman/main.go](./cmd/snowman/main.go) for usage example.
 
 ### As Binary
 
 1. Install using `go get -u -v github.com/spy16/snowman/cmd/snowman`
-2. Run using `snowman --name=snowy`
+2. Run using `snowman --name=snowy --slack=<token>`
 
 ## TODO
 

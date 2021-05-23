@@ -12,20 +12,6 @@ import (
 
 var _ UI = (*ConsoleUI)(nil)
 
-// UI represents the interface used for interactions between the bot and
-// the user.
-type UI interface {
-	// Say should display the message to the user as if the bot said it.
-	// Target user that should receive the message should be identified
-	// using the 'user' value.
-	Say(ctx context.Context, msg Msg) error
-
-	// Listen should listen for messages from user and deliver them to the
-	// handler. Listen should block until UI reaches a terminal state or
-	// until context is cancelled.
-	Listen(ctx context.Context, handle func(msg Msg)) error
-}
-
 // ConsoleUI implements a console based UI. Stdin is used for reading
 // input from the user and Stdout is used for output.
 type ConsoleUI struct {

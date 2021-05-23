@@ -1,4 +1,4 @@
-package slack
+package snowman
 
 import (
 	"context"
@@ -8,17 +8,15 @@ import (
 	"time"
 
 	"github.com/slack-go/slack"
-
-	"github.com/spy16/snowman"
 )
+
+var _ UI = (*SlackUI)(nil)
 
 const maxConnectAttempts = 5
 
-var _ snowman.UI = (*UI)(nil)
-
-// UI implements snowman UI using Slack RTM based API.
-type UI struct {
-	snowman.Logger
+// SlackUI implements snowman SlackUI using Slack RTM based API.
+type SlackUI struct {
+	Logger
 
 	Token        string
 	Options      []slack.Option
@@ -32,7 +30,7 @@ type UI struct {
 
 // Say sends a message to the user/channel on Slack identified using the UserID
 // in the msg.To field.
-func (sui *UI) Say(ctx context.Context, msg snowman.Msg) error {
+func (sui *SlackUI) Say(ctx context.Context, msg Msg) error {
 	channel, ok := msg.To.Attribs["slack_channel"].(string)
 	if !ok {
 		return errors.New("slack_channel attrib missing")
@@ -51,13 +49,13 @@ func (sui *UI) Say(ctx context.Context, msg snowman.Msg) error {
 	return err
 }
 
-func (sui *UI) Listen(ctx context.Context, handle func(msg snowman.Msg)) error {
+func (sui *SlackUI) Listen(ctx context.Context, handle func(msg Msg)) error {
 	sui.client = slack.New(sui.Token, sui.Options...)
 	sui.slRTM = sui.client.NewRTM()
 	go sui.slRTM.ManageConnection()
 
 	if sui.Logger == nil {
-		sui.Logger = snowman.NoOpLogger{}
+		sui.Logger = NoOpLogger{}
 	}
 
 	for {
@@ -102,8 +100,8 @@ func (sui *UI) Listen(ctx context.Context, handle func(msg snowman.Msg)) error {
 	}
 }
 
-func (sui *UI) handleMessageEvent(e *slack.MessageEvent, handle func(msg snowman.Msg)) {
-	from := snowman.User{
+func (sui *SlackUI) handleMessageEvent(e *slack.MessageEvent, handle func(msg Msg)) {
+	from := User{
 		ID:   e.User,
 		Name: e.Username,
 		Attribs: map[string]interface{}{
@@ -119,14 +117,14 @@ func (sui *UI) handleMessageEvent(e *slack.MessageEvent, handle func(msg snowman
 		from.Attribs["slack_ts"] = e.Timestamp
 	}
 
-	handle(snowman.Msg{
+	handle(Msg{
 		At:   time.Now(),
 		From: from,
 		Body: e.Text,
 	})
 }
 
-func (sui *UI) stripAtAddress(ev *slack.MessageEvent) bool {
+func (sui *SlackUI) stripAtAddress(ev *slack.MessageEvent) bool {
 	var prefixes = []string{
 		addressUser(sui.self.ID, ""),
 		addressUser(sui.self.ID, sui.self.Name),
