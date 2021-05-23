@@ -1,12 +1,12 @@
-- tag: sys.intro
+- tag: intro
   patterns:
     - (who|what) are you
     - what is your name
     - tell me about you(rself)?
   response:
-    i am snowy, a chatbot.
+    I am Snowy, a chatbot.
 
-- tag: sys.capabilities
+- tag: help
   patterns:
     - (please\s+)?help(\s+please)?
     - what can you do
@@ -14,14 +14,14 @@
   response: |
     I can have simple conversations with you!
 
-- tag: sys.greeting
+- tag: greetings
   patterns:
     - how are you
     - hi|hello|howdy|wassup
   response: |
     Hi! How are you today?
 
-- tag: sys.goodbye
+- tag: goodbye
   patterns:
     - good bye
     - bye
@@ -29,7 +29,12 @@
     - adios
   response: Bye! Have a good day!
 
-- tag: sys.confirmation
+- tag: confirm yes
+  patterns:
+    - (yes|okay|affirmative|sure|fine)(\s+please)?
+  response: Sorry, but I wasn't waiting for your confirmation on anything.
+
+- tag: confirm no
   patterns:
     - (yes|okay|affirmative|sure|fine)(\s+please)?
   response: Sorry, but I wasn't waiting for your confirmation on anything.
