@@ -36,5 +36,5 @@
 
 - tag: confirm no
   patterns:
-    - (yes|okay|affirmative|sure|fine)(\s+please)?
+    - (no|nah|negative|not ok|fuck off|don't|do not)(\s+please)?
   response: Sorry, but I wasn't waiting for your confirmation on anything.
