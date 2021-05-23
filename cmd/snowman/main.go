@@ -5,6 +5,7 @@ import (
 	"flag"
 	"log"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/sirupsen/logrus"
@@ -31,16 +32,21 @@ func main() {
 		log.Fatalf("failed to load intents from '%s': %v", *intentsDir, err)
 	}
 
+	var ui snowman.UI = &snowman.ConsoleUI{Prompt: "user=> "}
+	if *slackToken != "" {
+		ui = &snowman.SlackUI{
+			Token:  *slackToken,
+			Logger: logger,
+		}
+	}
+
 	snowy := snowman.Bot{
+		UI:      ui,
 		Logger:  logger,
 		Handler: handler,
 		Self: snowman.User{
 			ID:   *name,
 			Name: *name,
-		},
-		UI: &snowman.SlackUI{
-			Token:  *slackToken,
-			Logger: logger,
 		},
 	}
 	if err := snowy.Run(ctx); err != nil {
@@ -54,6 +60,6 @@ func simpleHandler() snowman.Fn {
 			return di.Say(msg.Context(), "I could not understand what you just said 😐")
 		}
 
-		return di.Say(msg.Context(), msg.Intents[0].Response)
+		return di.Say(msg.Context(), strings.TrimSpace(msg.Intents[0].Response))
 	}
 }
