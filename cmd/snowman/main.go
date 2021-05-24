@@ -35,8 +35,9 @@ func main() {
 	var ui snowman.UI = &snowman.ConsoleUI{Prompt: "user=> "}
 	if *slackToken != "" {
 		ui = &snowman.SlackUI{
-			Token:  *slackToken,
-			Logger: logger,
+			Token:         *slackToken,
+			Logger:        logger,
+			EnableChannel: true,
 		}
 	}
 

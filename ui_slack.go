@@ -18,9 +18,9 @@ const maxConnectAttempts = 5
 type SlackUI struct {
 	Logger
 
-	Token        string
-	Options      []slack.Option
-	EnableGroups bool
+	Token         string
+	Options       []slack.Option
+	EnableChannel bool
 
 	client    *slack.Client
 	slRTM     *slack.RTM
@@ -85,9 +85,15 @@ func (sui *SlackUI) Listen(ctx context.Context, handle func(msg Msg)) error {
 				sui.Infof("connected as '%s' (ID: %s)", sui.self.Name, sui.self.ID)
 
 			case *slack.MessageEvent:
-				if e.Hidden {
+				if e.Hidden || (e.User == sui.self.ID) {
 					continue
-				} else if e.User == sui.self.ID {
+				}
+
+				ch, err := sui.client.GetConversationInfo(e.Channel, false)
+				if err != nil {
+					sui.Warnf("failed to fetch conversation info: %v", err)
+					continue
+				} else if ch.IsChannel && (!sui.EnableChannel || !sui.isAddressedToMe(e)) {
 					continue
 				}
 
@@ -130,6 +136,25 @@ func (sui *SlackUI) stripAtAddress(ev *slack.MessageEvent) bool {
 		addressUser(sui.self.ID, sui.self.Name),
 	}
 
+	msgText := ev.Msg.Text
+	for _, prefix := range prefixes {
+		if strings.HasPrefix(ev.Msg.Text, prefix) {
+			msgText = strings.TrimSpace(strings.Replace(ev.Msg.Text, prefix, "", -1))
+			ev.Text = msgText
+			return true
+		}
+	}
+
+	return false
+}
+
+func (sui *SlackUI) isAddressedToMe(ev *slack.MessageEvent) bool {
+	var prefixes = []string{
+		"<@" + sui.self.ID + ">",
+		"<@" + sui.self.ID + "|" + sui.self.Name + ">:",
+	}
+
+	sui.Debugf("received message: %v", ev.Msg.Text)
 	msgText := ev.Msg.Text
 	for _, prefix := range prefixes {
 		if strings.HasPrefix(ev.Msg.Text, prefix) {
