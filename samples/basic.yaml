@@ -10,31 +10,28 @@
   patterns:
     - (please\s+)?help(\s+please)?
     - what can you do
-    - instructions
+    - ^(instructions)$
   response: |
     I can have simple conversations with you!
 
 - tag: greetings
   patterns:
     - how are you
-    - hi|hello|howdy|wassup
+    - ^(hi|hello|howdy|wassup)$
   response: |
     Hi! How are you today?
 
 - tag: goodbye
   patterns:
-    - good bye
-    - bye
-    - seeya
-    - adios
+    - ^(good bye|bye|seeya|adios)$
   response: Bye! Have a good day!
 
 - tag: confirm yes
   patterns:
-    - (yes|okay|affirmative|sure|fine)(\s+please)?
+    - ^(yes|okay|affirmative|sure|fine)$(\s+please)?
   response: Sorry, but I wasn't waiting for your confirmation on anything.
 
 - tag: confirm no
   patterns:
-    - (no|nah|negative|not ok|fuck off|don't|do not)(\s+please)?
+    - ^(no|nah|negative|not ok|fuck off|don't|do not)$(\s+please)?
   response: Sorry, but I wasn't waiting for your confirmation on anything.

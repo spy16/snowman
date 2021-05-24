@@ -40,6 +40,7 @@ func (sui *SlackUI) Say(ctx context.Context, msg Msg) error {
 	opts := []slack.MsgOption{
 		slack.MsgOptionAsUser(true),
 		slack.MsgOptionText(msg.Body, false),
+		slack.MsgOptionParse(false),
 	}
 
 	if ts, ok := msg.To.Attribs["slack_ts"].(string); ok {

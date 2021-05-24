@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"flag"
+	"fmt"
 	"log"
 	"os/signal"
-	"strings"
 	"syscall"
+	"text/template"
 
 	"github.com/sirupsen/logrus"
 
@@ -61,7 +63,22 @@ func simpleHandler() snowman.Fn {
 		if len(msg.Intents) == 0 {
 			return di.Say(msg.Context(), "I could not understand what you just said 😐")
 		}
+		intent := msg.Intents[0]
 
-		return di.Say(msg.Context(), strings.TrimSpace(msg.Intents[0].Response))
+		data := map[string]interface{}{}
+		for k, v := range intent.Context {
+			data[k] = v
+		}
+
+		tpl, err := template.New("response").Parse(intent.Response)
+		if err != nil {
+			return di.Say(msg.Context(), fmt.Sprintf("Sorry, I am facing issues while fetching that info: %v", err))
+		}
+
+		var buf bytes.Buffer
+		if err := tpl.Execute(&buf, data); err != nil {
+			return di.Say(msg.Context(), fmt.Sprintf("Sorry, I am facing issues while fetching that info: %v", err))
+		}
+		return di.Say(msg.Context(), buf.String())
 	}
 }
