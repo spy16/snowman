@@ -21,6 +21,7 @@ type SlackUI struct {
 	Token         string
 	Options       []slack.Option
 	EnableChannel bool
+	ThreadDirect  bool
 
 	client    *slack.Client
 	slRTM     *slack.RTM
@@ -36,16 +37,16 @@ func (sui *SlackUI) Say(ctx context.Context, msg Msg) error {
 		return errors.New("slack_channel attrib missing")
 	}
 
-	ts, ok := msg.To.Attribs["slack_ts"].(string)
-	if !ok {
-		return errors.New("slack_ts attrib missing")
-	}
-
-	_, _, err := sui.slRTM.PostMessageContext(ctx, channel, []slack.MsgOption{
+	opts := []slack.MsgOption{
 		slack.MsgOptionAsUser(true),
 		slack.MsgOptionText(msg.Body, false),
-		slack.MsgOptionTS(ts),
-	}...)
+	}
+
+	if ts, ok := msg.To.Attribs["slack_ts"].(string); ok {
+		opts = append(opts, slack.MsgOptionTS(strings.TrimSpace(ts)))
+	}
+
+	_, _, err := sui.slRTM.PostMessageContext(ctx, channel, opts...)
 	return err
 }
 
@@ -97,7 +98,7 @@ func (sui *SlackUI) Listen(ctx context.Context, handle func(msg Msg)) error {
 					continue
 				}
 
-				sui.handleMessageEvent(e, handle)
+				sui.handleMessageEvent(ch, e, handle)
 
 			default:
 				sui.Debugf("unhandled event: %v", ev)
@@ -106,7 +107,7 @@ func (sui *SlackUI) Listen(ctx context.Context, handle func(msg Msg)) error {
 	}
 }
 
-func (sui *SlackUI) handleMessageEvent(e *slack.MessageEvent, handle func(msg Msg)) {
+func (sui *SlackUI) handleMessageEvent(ch *slack.Channel, e *slack.MessageEvent, handle func(msg Msg)) {
 	from := User{
 		ID:   e.User,
 		Name: e.Username,
@@ -115,12 +116,14 @@ func (sui *SlackUI) handleMessageEvent(e *slack.MessageEvent, handle func(msg Ms
 		},
 	}
 
-	if e.ThreadTimestamp != "" {
-		from.Attribs["slack_ts"] = e.ThreadTimestamp
-	} else if e.EventTimestamp != "" {
-		from.Attribs["slack_ts"] = e.EventTimestamp
-	} else {
-		from.Attribs["slack_ts"] = e.Timestamp
+	if !ch.IsIM || sui.ThreadDirect {
+		if e.ThreadTimestamp != "" {
+			from.Attribs["slack_ts"] = e.ThreadTimestamp
+		} else if e.EventTimestamp != "" {
+			from.Attribs["slack_ts"] = e.EventTimestamp
+		} else {
+			from.Attribs["slack_ts"] = e.Timestamp
+		}
 	}
 
 	handle(Msg{

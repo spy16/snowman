@@ -38,6 +38,7 @@ func main() {
 			Token:         *slackToken,
 			Logger:        logger,
 			EnableChannel: true,
+			ThreadDirect:  false,
 		}
 	}
 
