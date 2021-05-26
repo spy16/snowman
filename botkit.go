@@ -83,6 +83,7 @@ func (bot *Bot) allocDialogue(msg Msg) *dialogueCtx {
 	}
 
 	di := bot.dialogues[msg.From.String()]
+	di.with = msg.From
 	return di
 }
 
